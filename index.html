@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Miro 🤎</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Rye&display=swap');
+
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Cinzel,serif;background:#160d08;color:#f6e5c4}
+body{overflow-x:hidden}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:20;
+  background:radial-gradient(circle at center,transparent 35%,rgba(0,0,0,.72) 100%);
+}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:1}
+.page{position:relative;z-index:2;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 16px}
+.card{
+  width:min(920px,100%);min-height:650px;position:relative;overflow:hidden;
+  border:1px solid rgba(246,229,196,.28);border-radius:22px;
+  background:linear-gradient(rgba(24,12,7,.38),rgba(24,12,7,.82)),url("miro.png") center/cover;
+  box-shadow:0 30px 80px rgba(0,0,0,.65);
+}
+.overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,5,.18),rgba(20,10,5,.78))}
+.content{position:relative;z-index:3;min-height:650px;padding:42px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.small{letter-spacing:5px;font-size:12px;opacity:.82;margin-bottom:18px}
+h1{font-family:Rye,serif;font-size:clamp(42px,11vw,86px);margin:0;text-shadow:0 5px 18px #000}
+.subtitle{font-size:clamp(14px,3vw,20px);letter-spacing:2px;max-width:650px;line-height:1.7;text-shadow:0 3px 10px #000}
+.btn{
+  margin-top:30px;padding:15px 25px;border:1px solid rgba(246,229,196,.6);
+  border-radius:4px;background:rgba(35,17,9,.72);color:#f6e5c4;
+  font-family:Cinzel,serif;letter-spacing:2px;font-weight:700;cursor:pointer;
+  transition:.25s;box-shadow:0 8px 25px rgba(0,0,0,.35)
+}
+.btn:hover{transform:translateY(-2px);background:rgba(87,43,20,.9)}
+.hidden{display:none!important}
+.letter{
+  max-width:650px;margin-top:28px;padding:28px 24px;
+  background:rgba(22,12,7,.82);border:1px solid rgba(246,229,196,.25);
+  border-radius:12px;line-height:1.9;animation:rise .8s ease both
+}
+.letter h2{font-family:Rye,serif;margin-top:0;font-size:30px}
+.letter p{margin:12px 0}
+.signature{margin-top:22px;font-size:20px}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.hint{position:absolute;bottom:16px;font-size:10px;opacity:.45;letter-spacing:2px}
+</style>
+</head>
+<body>
+<canvas id="dust"></canvas>
+
+<main class="page">
+  <section class="card">
+    <div class="overlay"></div>
+    <div class="content">
+      <div class="small">A LITTLE SOMETHING FOR</div>
+      <h1>MIRO</h1>
+      <div class="subtitle">From a dusty little corner of the Wild West… 🤎</div>
+
+      <button class="btn" id="openBtn">OPEN YOUR LETTER ♡</button>
+
+      <div class="letter hidden" id="letter">
+        <h2>Dear Miro,</h2>
+        <p>
+          You told me you love the old Wild West…
+          so I thought you deserved a little piece of that world.
+        </p>
+        <p>
+          I don't know if this is exactly what you imagined,
+          but I hope it makes you smile for a moment. 🌵
+        </p>
+        <p>
+          And maybe… somewhere between the sunsets, dusty roads
+          and old cowboy towns, there is a little place with your name on it.
+        </p>
+        <p class="signature">— From someone who was really happy to meet you 🤎</p>
+      </div>
+
+      <div class="hint">TURN THE SOUND UP • CLICK THE LETTER</div>
+    </div>
+  </section>
+</main>
+
+<script>
+// Soft original ambient "western night" sound made with Web Audio.
+// No external audio file is required.
+let audioStarted=false;
+function startAmbient(){
+  if(audioStarted)return;
+  audioStarted=true;
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(!C)return;
+  const ctx=new C(), master=ctx.createGain(), filter=ctx.createBiquadFilter();
+  master.gain.value=.035; filter.type="lowpass"; filter.frequency.value=900;
+  master.connect(filter).connect(ctx.destination);
+  const notes=[110,146.83,164.81,196,164.81,146.83];
+  let i=0;
+  function pluck(){
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type="triangle"; o.frequency.value=notes[i++%notes.length];
+    g.gain.setValueAtTime(0,ctx.currentTime);
+    g.gain.linearRampToValueAtTime(.16,ctx.currentTime+.03);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+1.8);
+    o.connect(g).connect(master); o.start(); o.stop(ctx.currentTime+1.9);
+  }
+  pluck();
+  setInterval(pluck,1900);
+}
+
+// Dust particles
+const canvas=document.getElementById("dust"),ctx=canvas.getContext("2d");
+let dots=[];
+function resize(){
+  canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio;
+  canvas.style.width=innerWidth+"px";canvas.style.height=innerHeight+"px";
+  dots=Array.from({length:Math.min(110,Math.floor(innerWidth/7))},()=>({
+    x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+    r:Math.random()*1.7+.3,v:Math.random()*.35+.08,a:Math.random()*.35+.08
+  }));
+}
+function animate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.save();
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  for(const d of dots){
+    d.y-=d.v;if(d.y<0)d.y=innerHeight;
+    ctx.globalAlpha=d.a;ctx.fillStyle="#f2d09a";
+    ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();requestAnimationFrame(animate);
+}
+addEventListener("resize",resize);resize();animate();
+
+document.getElementById("openBtn").addEventListener("click",()=>{
+  startAmbient();
+  document.getElementById("openBtn").classList.add("hidden");
+  document.getElementById("letter").classList.remove("hidden");
+});
+</script>
+</body>
+</html>
